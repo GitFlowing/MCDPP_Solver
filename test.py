@@ -1,15 +1,57 @@
 import subprocess
 import os
 
+def execute_MCDPP_solver(base_graph, demand_graph, n_sub, n_iter_half, n_sub_variant, lambda_option, VZK_option):
+    """
+    This function executes the MCDPP solver with specified parameters:
+    - base_graph: Path to the base graph of MCDPP
+    - demand_graph: Path to the demand graph of MCDPP
+    - n_sub: Number of iterations for subgradient calculation (lower bound)
+    - n_iter_half: Number of iterations for the step size update of subgradient calculation (lower bound)
+    - n_sub_variant: Number of iterations for the subgradient calculation for determination of branch node
+      for Branch and Bound procedure (only for VZK_option = 3)
+    - lambda_option: Option for the starting lambda value for subgradient calculation
+      1 = set lambda to 0
+      2 = set lambda to the value, for which parent node of Branch and Bound has maximum lower bound in subgradient calculation
+      3 = set lambda to the value, for which parent node of Branch and Bound has minimum number of conflicts for embedded paths
+    - VZK_option: Option for choosing the next branch node for the Branch and Bound procedure
+      1 = choose node in base_graph with the maximum number of conflicts for embedded paths at lambda_option
+      2 = choose middle node in base_graph of the embedded demand with the shortest way at lambda_option
+      3 = take all conflict nodes of the embedded demands at lambda_option,
+          calculate their lower bounds with subgradient calculation,
+          choose the node with the maximum lower bound for the next branch node
+
+    It constructs the command to run the solver and captures the solution of
+    the solver in ergebnis_output.txt file.
+    """
+
+    # Current directory path
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Path to the .exe file for solving Minimum Cost Disjoint Path Problem (MCDPP)
+    exe_path = os.path.join(current_dir, 'MCDPP.exe')
+
+    # Execute solver
+    result = subprocess.run([exe_path,
+                            str(base_graph_path),
+                            str(demand_graph_path),
+                            str(n_sub),
+                            str(n_iter_half),
+                            str(n_sub_variant),
+                            str(lambda_option),
+                            str(VZK_option)])
+
+    return True
+
 # Current directory path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Path to the .exe file for solving Minimum Cost Disjoint Path Problem (MCDPP)
-exe_path = os.path.join(current_dir, 'MCDPP.exe')
+#exe_path = os.path.join(current_dir, 'MCDPP.exe')
 
 # Paths to base graph and demand graph files as arguments for solver
-base_graph = 'deutschland1.gra'
-demand_graph = 'bedarf19.gra'
+base_graph = 'klein.gra'
+demand_graph = 'bedarf4.gra'
 base_graph_path = os.path.join(current_dir, 'Testdateien', base_graph)
 demand_graph_path = os.path.join(current_dir, 'Testdateien', demand_graph)
 
@@ -21,41 +63,19 @@ lambda_option = 2
 VZK_option = 1
 
 # Execute solver
-result = subprocess.run([exe_path,
-                         base_graph_path,
-                         demand_graph_path,
-                         str(n_sub),
-                         str(n_iter_half),
-                         str(n_sub_variant),
-                         str(lambda_option),
-                         str(VZK_option)])
-content = ""
+# result = subprocess.run([exe_path,
+#                          base_graph_path,
+#                          demand_graph_path,
+#                          str(n_sub),
+#                          str(n_iter_half),
+#                          str(n_sub_variant),
+#                          str(lambda_option),
+#                          str(VZK_option)])
 
-# Result of solver
-#with open("output.txt", "r") as file:
-#    content = file.read()
-
-
-
-
-
-# Starte das Programm und fange die Ausgabe ab
-# process = subprocess.Popen(
-#     [exe_path, base_graph_path, demand_graph_path],  # Das Programm, das du ausführen möchtest
-#     stdout=subprocess.PIPE,  # Um die Ausgabe zu erfassen
-#     stderr=subprocess.PIPE,  # Um Fehlerausgaben zu erfassen (optional)
-#     text=True  # Gibt die Ausgabe als String zurück (nicht als Bytes)
-# )
-
-# # Lese die Standardausgabe (stdout)
-# output, error = process.communicate()  # Warten bis das Programm beendet ist
-
-# # Zeige die Ausgabe an
-# print("Programm-Ausgabe:")
-# print(output)
-# print(type(output))
-
-# # Optional: Fehlerausgabe anzeigen, falls vorhanden
-# if error:
-#     print("Fehler-Ausgabe:")
-#     print(error)
+execute_MCDPP_solver(base_graph_path,
+                     demand_graph_path,
+                     n_sub,
+                     n_iter_half,
+                     n_sub_variant,
+                     lambda_option,
+                     VZK_option)
