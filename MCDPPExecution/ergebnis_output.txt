@@ -1,0 +1,7 @@
+Zeit in s: 0.034 
+Gesamtkosten einer optimalen Loesung des MCDPP sind: 40 
+Die Kanten einer optimalen Loesung beschrieben als Kanten-Indices des Basis-Graphen sind: 
+9 15 16 
+0 4 19 
+13 14 25 27 26 21 
+31 35 36 32 23 

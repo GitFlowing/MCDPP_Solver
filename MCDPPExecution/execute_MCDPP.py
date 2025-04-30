@@ -35,8 +35,8 @@ def execute_MCDPP_solver(base_graph, demand_graph, n_sub, n_iter_half, n_sub_var
 
     # Execute solver
     result = subprocess.run([exe_path,
-                            str(base_graph_path),
-                            str(demand_graph_path),
+                            str(base_graph),
+                            str(demand_graph),
                             str(n_sub),
                             str(n_iter_half),
                             str(n_sub_variant),
@@ -216,12 +216,14 @@ def plot_graph(graph,demand_graph, sol_path="", fig_size_x=20, fig_size_y=25, fi
 if __name__ == "__main__":
     # Current directory path
     current_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.join(current_dir, os.pardir)
+
 
     # Paths to base graph and demand graph files as arguments for solver
     base_graph = 'klein.gra'
     demand_graph = 'bedarf4ohneKommentar.gra'
-    base_graph_path = os.path.join(current_dir, 'Testdateien', base_graph)
-    demand_graph_path = os.path.join(current_dir, 'Testdateien', demand_graph)
+    base_graph_path = os.path.join(parent_dir, 'Testdateien', base_graph)
+    demand_graph_path = os.path.join(parent_dir, 'Testdateien', demand_graph)
 
     # Solver attributes
     n_sub = 200
