@@ -48,10 +48,11 @@ def execute_MCDPP_solver(base_graph, demand_graph, n_sub, n_iter_half, n_sub_var
 
 def extract_nodes_edges(graph):
     """
-    extract nodes and edges of a graph in a .gra file and return it as dictionary
+    extract nodes, edges and costs of a graph in a .gra file and return it as dictionary
     """
     nodes = {}
     edges = {}
+    edge_cost = {}
 
     with open(graph, 'r') as file:
         # read line by line and ignore hashtags as comments and empty lines
@@ -92,11 +93,17 @@ def extract_nodes_edges(graph):
                 edge_id = parts[0]
                 node1 = parts[1]
                 node2 = parts[2]
+
+                # Demand graph has no cost, but base graph has cost
+                cost = 0
+                if len(parts) >= 3:
+                    cost = float(parts[3])
                 # append to edges dictionary
                 edges.update({edge_id: [node1, node2]})
+                edge_cost.update({edge_id: cost})
                 counter += 1
 
-    return nodes, edges
+    return nodes, edges, edge_cost
 
 
 def extract_solution(result_file):
@@ -134,7 +141,9 @@ def extract_solution(result_file):
 
     return result
 
-def plot_graph(graph,demand_graph, sol_path="", fig_size_x=20, fig_size_y=25, fig_dpi=75, node_size=500, edge_size=3, terminal_size=500):
+def plot_graph(graph,demand_graph, sol_path="", fig_size_x=20, fig_size_y=25, fig_dpi=75,
+               node_size=500, edge_size=3, terminal_size=500, edge_labels = False,
+               edge_lables_size=10, edge_lable_pos=0.5):
     """
     It creates a plot of the base graph or demand graph or base graph with embedded solution.
     The parameters are:
@@ -147,14 +156,17 @@ def plot_graph(graph,demand_graph, sol_path="", fig_size_x=20, fig_size_y=25, fi
     - node_size: size of nodes in graph in pt^2
     - edge_size: size of edges in graph in pt
     - terminal_size: size of demand nodes in pt^2
-
+    - edge_labels: if True, the edges are labeled with their cost
+    - edge_lables_size: size of edge labels in pt
+    - edge_lable_pos: position of edge labels in graph
     """
     # Extract nodes and edges from the graph
-    nodes, edges = extract_nodes_edges(graph)
-    demand_nodes, demand_edges = extract_nodes_edges(demand_graph)
+    nodes, edges, edge_cost = extract_nodes_edges(graph)
+    demand_nodes, demand_edges, demand_edge_cost = extract_nodes_edges(demand_graph)
 
     node_ids = list(nodes.keys())
     edges_list = list(edges.values())
+    edge_cost_list = list(edge_cost.values())
     demand_node_ids = list(demand_nodes.keys())
 
     # Create graph
@@ -189,7 +201,6 @@ def plot_graph(graph,demand_graph, sol_path="", fig_size_x=20, fig_size_y=25, fi
         # Draw edges with different colors
         for j in range(len(edges_list)):
             col_index = j % len(colors)
-            print(edges_list[j])
             nx.draw_networkx_edges(G, pos=nodes, edgelist=[edges_list[j]], edge_color=colors[col_index], width=edge_size)
     # Draw base graph with embedded solution
     if graph != demand_graph and sol_path != "":
@@ -210,6 +221,12 @@ def plot_graph(graph,demand_graph, sol_path="", fig_size_x=20, fig_size_y=25, fi
             col_index = j % len(colors)
             nx.draw_networkx_edges(G, pos=nodes, edgelist=paths[j], edge_color=colors[col_index], width=2*edge_size)
 
+    # Draw edge labels with costs
+    if edge_labels:
+        tuple_edge_list = [tuple(edge) for edge in edges_list]
+        edge_label_dict = dict(zip(tuple_edge_list, edge_cost_list))
+        nx.draw_networkx_edge_labels(G, pos=nodes, edge_labels=edge_label_dict, font_size=edge_lables_size, label_pos=edge_lable_pos)
+
     return fig
 
 
@@ -220,8 +237,8 @@ if __name__ == "__main__":
 
 
     # Paths to base graph and demand graph files as arguments for solver
-    base_graph = 'klein.gra'
-    demand_graph = 'bedarf4ohneKommentar.gra'
+    base_graph = 'beispielBesserUnloesbar.gra'
+    demand_graph = 'bedarf3.gra'
     base_graph_path = os.path.join(parent_dir, 'Testdateien', base_graph)
     demand_graph_path = os.path.join(parent_dir, 'Testdateien', demand_graph)
 
@@ -241,6 +258,16 @@ if __name__ == "__main__":
                         lambda_option,
                         VZK_option)
 
-    # Create graphs
-    fig = plot_graph(base_graph_path, demand_graph_path, sol_path="ergebnis_output.txt")
-    plt.show()
+    # Does solution exists
+    solution_exists = True
+    with open("ergebnis_output.txt", 'r') as file:
+        for line in file:
+            if line.startswith("MCDPP besitzt keine Loesung."):
+                solution_exists = False
+                break
+
+    # Create graphs, when solution exists
+    if solution_exists:
+        fig = plot_graph(base_graph_path, demand_graph_path, sol_path="ergebnis_output.txt",
+                        edge_labels=True, edge_lables_size=30, edge_lable_pos=0.3)
+        fig.savefig("graph.jpg", format="jpg")

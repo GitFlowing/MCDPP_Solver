@@ -1,7 +1,7 @@
 # Beispielgraph Besser
 
 9   # Knoten
-18   # Kanten
+15   # Kanten
 ungerichtet
 
 # Knoten     x-Koord      y-Koord
@@ -21,12 +21,9 @@ ungerichtet
 
 0101            1           2              1
 0102            1           5              300
-0103            1           4              200
-0104            2           4              50
 0105            2           5              80
 0106            2           9              130
 0107            2           3              210
-0108            3           8              110
 0109            3           9              120
 0110            4           5              90
 0111            4           6              10
