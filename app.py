@@ -295,31 +295,30 @@ if option == "MCDPP Solver":
 
     # We need a demand graph for the base graph visualization
     if base_graph_file is not None and demand_graph_file is not None:
-        # Save file
+        # Save file base graph and demand graph
         file_contents = base_graph_file.read().decode("utf-8")
         with open(save_base_path, "w") as f:
             f.write(file_contents)
-
-        # plot file
-        fig = plot_graph(save_base_path, save_demand_path, sol_path="",
-                         fig_size_x=fig_size_x, fig_size_y=fig_size_y, fig_dpi=fig_dpi,
-                        node_size=node_size, edge_size=edge_size, terminal_size=terminal_size,
-                        edge_labels=edge_labels, edge_lables_size=edge_labels_size,
-                        edge_lable_pos=edge_label_pos)
-        st.markdown("## Base graph:")
-        st.pyplot(fig)
-
-    # Demand graph visualization
-    if demand_graph_file is not None:
-        # Save file
         file_contents = demand_graph_file.read().decode("utf-8")
         with open(save_demand_path, "w") as f:
             f.write(file_contents)
 
-        # plot file
-        fig = plot_graph(save_demand_path, save_demand_path, sol_path="")
+        # plot file base graph and demand graph
+        fig_base = plot_graph(save_base_path, save_demand_path, sol_path="",
+                         fig_size_x=fig_size_x, fig_size_y=fig_size_y, fig_dpi=fig_dpi,
+                        node_size=node_size, edge_size=edge_size, terminal_size=terminal_size,
+                        edge_labels=edge_labels, edge_lables_size=edge_labels_size,
+                        edge_lable_pos=edge_label_pos)
+        fig_demand = plot_graph(save_demand_path, save_demand_path, sol_path="",
+                        fig_size_x=fig_size_x, fig_size_y=fig_size_y, fig_dpi=fig_dpi,
+                        node_size=node_size, edge_size=edge_size, terminal_size=terminal_size,
+                        edge_labels=edge_labels, edge_lables_size=edge_labels_size,
+                        edge_lable_pos=edge_label_pos)
+
+        st.markdown("## Base graph:")
+        st.pyplot(fig_base)
         st.markdown("## Demand graph:")
-        st.pyplot(fig)
+        st.pyplot(fig_demand)
 
     # Solver attributes
     st.markdown("## Solver parameters")
