@@ -54,6 +54,7 @@ def extract_nodes_edges(graph):
     edges = {}
     edge_cost = {}
 
+
     with open(graph, 'r') as file:
         # read line by line and ignore hashtags as comments and empty lines
         counter = 0
@@ -96,7 +97,7 @@ def extract_nodes_edges(graph):
 
                 # Demand graph has no cost, but base graph has cost
                 cost = 0
-                if len(parts) >= 3:
+                if len(parts) >= 4:
                     cost = float(parts[3])
                 # append to edges dictionary
                 edges.update({edge_id: [node1, node2]})
@@ -237,8 +238,8 @@ if __name__ == "__main__":
 
 
     # Paths to base graph and demand graph files as arguments for solver
-    base_graph = 'beispielBesserUnloesbar.gra'
-    demand_graph = 'bedarf3.gra'
+    base_graph = 'beispielBesser.gra'
+    demand_graph = 'bedarf3ohneKap.gra'
     base_graph_path = os.path.join(parent_dir, 'Testdateien', base_graph)
     demand_graph_path = os.path.join(parent_dir, 'Testdateien', demand_graph)
 
