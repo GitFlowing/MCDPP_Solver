@@ -13,7 +13,7 @@ in C++ and can be used as an Windows MCDPP.exe program.
 Also big instances can be solved in a short amount of time.
 
 ![Base graph](graph_pics/Testinstanz4Base.png)
-![Demand graph](graph_pics/Testinstanz4Demand.png.png)
+![Demand graph](graph_pics/Testinstanz4Demand.png)
 ![Solution](graph_pics/Testinstanz4Optimum.png)
 
 For more information visit the streamlit website.
