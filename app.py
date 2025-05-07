@@ -1,5 +1,5 @@
 import streamlit as st
-from MCDPPExecution.execute_MCDPP import execute_MCDPP_solver, plot_graph
+from MCDPPExecution.execute_MCDPP import execute_MCDPP_solver, plot_graph, extract_solution
 import os
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -121,8 +121,9 @@ if option == "MCDPP description":
 # ====================================
 
 if option == "Solver options":
-    st.title("Format of the graphs")
+    st.title("Solver options")
 
+    st.markdown("## Format of the graphs")
     st.write("""
             The base graph and the demand graph are both undirected graphs. They are
             saved in a .gra file. In this format # is used to comment a line and
@@ -149,7 +150,7 @@ if option == "Solver options":
             """)
 
 
-    st.markdown("\n**Base graph:**")
+    st.markdown("### Base graph:")
     content = """
             # Base graph example
 
@@ -194,7 +195,7 @@ if option == "Solver options":
 
     st.code(content, language="text")
 
-    st.markdown("\n**Demand graph:**")
+    st.markdown("### Demand graph:")
     content = """
             # Demand graph example
 
@@ -218,7 +219,7 @@ if option == "Solver options":
             """
 
     st.code(content, language="text")
-
+    st.markdown("## Solver parameters")
     st.write("""
              The solver for the MCDPP has the following parameters:
             1. base graph
@@ -257,6 +258,185 @@ if option == "Solver options":
             """)
 
 
+
+
+# ====================================
+# Implementation of the solver
+# ====================================
+
+if option == "MCDPP Solver":
+    st.title("MCDPP Solver")
+
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+
+    base_graph_file = st.file_uploader("Upload base graph", type=["gra"])
+    demand_graph_file = st.file_uploader("Upload demand graph", type=["gra"])
+
+    # Parameter for visualization
+    st.markdown("## Visualization of the graphs")
+    fig_size_x = st.slider("width of graph plot picture in inch:", min_value=1, max_value=100, value=20)
+    fig_size_y = st.slider("height of graph plot picture in inch:", min_value=1, max_value=100, value=25)
+    fig_dpi = st.slider("picture dots per inch:", min_value=1, max_value=1000, value=75)
+    node_size = st.slider("size of nodes in graph in pt^2:", min_value=1, max_value=1000, value=500)
+    edge_size = st.slider("size of edges in graph in pt:", min_value=1, max_value=100, value=3)
+    terminal_size = st.slider("size of demand nodes in pt^2:", min_value=1, max_value=1000, value=500)
+    edge_labels = st.checkbox("show edge costs", value=False)
+    edge_labels_size = 0
+    edge_label_pos = 0
+    if edge_labels:
+        edge_labels_size = st.slider("size of edge labels in pt:", min_value=1, max_value=100, value=10)
+        edge_label_pos = st.slider("position of edge labels in percent of the edge:", min_value=0.0, max_value=1.0, value=0.5)
+
+
+
+    # Visualization of the graphs
+    save_base_path = os.path.join(current_dir, 'Results', 'base_graph.gra')
+    save_demand_path = os.path.join(current_dir, 'Results', 'demand_graph.gra')
+
+    # We need a demand graph for the base graph visualization
+    if base_graph_file is not None and demand_graph_file is not None:
+        # Save file
+        file_contents = base_graph_file.read().decode("utf-8")
+        with open(save_base_path, "w") as f:
+            f.write(file_contents)
+
+        # plot file
+        fig = plot_graph(save_base_path, save_demand_path, sol_path="",
+                         fig_size_x=fig_size_x, fig_size_y=fig_size_y, fig_dpi=fig_dpi,
+                        node_size=node_size, edge_size=edge_size, terminal_size=terminal_size,
+                        edge_labels=edge_labels, edge_lables_size=edge_labels_size,
+                        edge_lable_pos=edge_label_pos)
+        st.markdown("## Base graph:")
+        st.pyplot(fig)
+
+    # Demand graph visualization
+    if demand_graph_file is not None:
+        # Save file
+        file_contents = demand_graph_file.read().decode("utf-8")
+        with open(save_demand_path, "w") as f:
+            f.write(file_contents)
+
+        # plot file
+        fig = plot_graph(save_demand_path, save_demand_path, sol_path="")
+        st.markdown("## Demand graph:")
+        st.pyplot(fig)
+
+    # Solver attributes
+    st.markdown("## Solver parameters")
+    n_sub = st.slider("Number of iterations for subgradient calculation (lower bound from Lagrange relaxation)",
+                      min_value=10, max_value=1000, value=200)
+    n_iter_half = st.slider("Number of iterations for the step size update of subgradient calculation (lower bound)",
+                            min_value=3, max_value=1000, value=10)
+    n_sub_variant = 40
+    lambda_option = st.number_input("Option for the starting lambda value for subgradient calculation",
+                                min_value=1, max_value=3, value=2)
+    VZK_option = st.number_input("Option for choosing the next branch node for the Branch and Bound procedure",
+                            min_value=1, max_value=3, value=1)
+    if VZK_option == 3:
+        n_sub_variant = st.slider("Number of iterations for the subgradient calculation for determination of branch node for Branch and Bound procedure",
+                                min_value=10, max_value=1000, value=40)
+
+    # Solver
+    if st.button("Run solver"):
+        if base_graph_file is not None and demand_graph_file is not None:
+            # Run solver
+            execute_MCDPP_solver(save_base_path,
+                                 save_demand_path,
+                                 n_sub,
+                                 n_iter_half,
+                                 n_sub_variant,
+                                 lambda_option,
+                                 VZK_option)
+
+            result_time = -1
+            result_costs = -1
+
+            # Does solution exists
+            solution_exists = True
+            with open("ergebnis_output.txt", 'r') as file:
+                for line in file:
+                    if line.startswith("Zeit in s:"):
+                        result_time = line.split(":")[1].strip()
+                    if line.startswith("MCDPP besitzt keine Loesung."):
+                        solution_exists = False
+                        break
+
+            # Create graphs, when solution exists
+            st.markdown("## Result:")
+            st.write(f"Time of the solver in s: {result_time}")
+
+            if solution_exists:
+                # costs of optimal solution
+                result = extract_solution('ergebnis_output.txt')
+                result_costs = result['total_cost']
+                st.write(f"Total cost of the solution: {result_costs}")
+
+                #plot solution
+                fig = plot_graph(save_base_path, save_demand_path, sol_path="ergebnis_output.txt",
+                                fig_size_x=fig_size_x, fig_size_y=fig_size_y, fig_dpi=fig_dpi,
+                                node_size=node_size, edge_size=edge_size, terminal_size=terminal_size,
+                                edge_labels=edge_labels, edge_lables_size=edge_labels_size,
+                                edge_lable_pos=edge_label_pos)
+                st.markdown("## Base graph with embedded solution:")
+                st.pyplot(fig)
+
+            else:
+                st.write("No solution exists for this instance.")
+        else:
+            st.warning("Please upload both base graph and demand graph.")
+
+    # Run solver
+    # execute_MCDPP_solver(base_graph_path,
+    #                     demand_graph_path,
+    #                     n_sub,
+    #                     n_iter_half,
+    #                     n_sub_variant,
+    #                     lambda_option,
+    #                     VZK_option)
+
+
+
+
+    #  # Current directory path
+    # current_dir = os.path.dirname(os.path.abspath(__file__))
+    # parent_dir = os.path.join(current_dir, os.pardir)
+
+
+    # # Paths to base graph and demand graph files as arguments for solver
+    # base_graph = 'beispielBesser.gra'
+    # demand_graph = 'bedarf3ohneKap.gra'
+    # base_graph_path = os.path.join(parent_dir, 'Testdateien', base_graph)
+    # demand_graph_path = os.path.join(parent_dir, 'Testdateien', demand_graph)
+
+    # # Solver attributes
+    # n_sub = 200
+    # n_iter_half = 10
+    # n_sub_variant = 40
+    # lambda_option = 2
+    # VZK_option = 1
+
+    # # Run solver
+    # execute_MCDPP_solver(base_graph_path,
+    #                     demand_graph_path,
+    #                     n_sub,
+    #                     n_iter_half,
+    #                     n_sub_variant,
+    #                     lambda_option,
+    #                     VZK_option)
+
+    # # Does solution exists
+    # solution_exists = True
+    # with open("ergebnis_output.txt", 'r') as file:
+    #     for line in file:
+    #         if line.startswith("MCDPP besitzt keine Loesung."):
+    #             solution_exists = False
+    #             break
+
+    # # Create graphs, when solution exists
+    # if solution_exists:
+    #     fig = plot_graph(base_graph_path, demand_graph_path, sol_path="ergebnis_output.txt",
+    #                     edge_labels=True, edge_lables_size=30, edge_lable_pos=0.3)
+    #     fig.savefig("graph.jpg", format="jpg")
 
 
 

@@ -239,7 +239,7 @@ if __name__ == "__main__":
 
     # Paths to base graph and demand graph files as arguments for solver
     base_graph = 'beispielBesser.gra'
-    demand_graph = 'bedarf3ohneKap.gra'
+    demand_graph = 'bedarf3.gra'
     base_graph_path = os.path.join(parent_dir, 'Testdateien', base_graph)
     demand_graph_path = os.path.join(parent_dir, 'Testdateien', demand_graph)
 
@@ -259,16 +259,31 @@ if __name__ == "__main__":
                         lambda_option,
                         VZK_option)
 
+    result_time = -1
+    result_cost = -1
+
     # Does solution exists
     solution_exists = True
     with open("ergebnis_output.txt", 'r') as file:
         for line in file:
+            if line.startswith("Zeit in s:"):
+                result_time = line.split(":")[1].strip()
             if line.startswith("MCDPP besitzt keine Loesung."):
                 solution_exists = False
                 break
 
+    print("========")
+    print("Results")
+    print("========")
+    print(" ")
+    print("Time: ", result_time)
     # Create graphs, when solution exists
     if solution_exists:
+        result = extract_solution('ergebnis_output.txt')
+        result_costs = result['total_cost']
+        print("Costs: ", result_costs)
         fig = plot_graph(base_graph_path, demand_graph_path, sol_path="ergebnis_output.txt",
-                        edge_labels=True, edge_lables_size=30, edge_lable_pos=0.3)
+                        edge_labels=False, edge_lables_size=30, edge_lable_pos=0.3)
         fig.savefig("graph.jpg", format="jpg")
+    else:
+        print("MCDPP has no solution.")
