@@ -17,3 +17,4 @@ Also big instances can be solved in a short amount of time.
 ![Solution](graph_pics/Testinstanz4Optimum.png)
 
 For more information visit the streamlit website.
+[MCDPP Solver](https://mcdpp-solver.streamlit.app/)
