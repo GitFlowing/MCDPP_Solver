@@ -31,7 +31,7 @@ def execute_MCDPP_solver(base_graph, demand_graph, n_sub, n_iter_half, n_sub_var
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
     # Path to the .exe file for solving Minimum Cost Disjoint Path Problem (MCDPP)
-    exe_path = os.path.join(current_dir, 'MCDPP.exe')
+    exe_path = os.path.join(current_dir, './mcdpp')
 
     # Execute solver
     result = subprocess.run([exe_path,
@@ -238,8 +238,8 @@ if __name__ == "__main__":
 
 
     # Paths to base graph and demand graph files as arguments for solver
-    base_graph = 'beispielBesser.gra'
-    demand_graph = 'bedarf3.gra'
+    base_graph = 'deutschland1.gra'
+    demand_graph = 'bedarf19.gra'
     base_graph_path = os.path.join(parent_dir, 'Testdateien', base_graph)
     demand_graph_path = os.path.join(parent_dir, 'Testdateien', demand_graph)
 

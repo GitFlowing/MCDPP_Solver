@@ -29,26 +29,26 @@ BranchBoundErgebnis branchAndBound(const Graph& base_graph, const Graph& demand_
 	}
 
 
-	// Obere Schranke  
+	// Obere Schranke
 	double kanten_minimum = minKantenGewicht(base_graph);
 	double obere_schranke = kantenSummeUpgrade(base_graph, demand_graph);
 	double kanten_summe = kantenSumme(base_graph);
 
-	// l_upper muss größer sein, als obere_schranke
+	// l_upper muss grï¿½ï¿½er sein, als obere_schranke
 	double l_upper = (obere_schranke + kanten_minimum > kanten_summe) ? (obere_schranke + kanten_minimum) : (kanten_summe);
 
 
 	// Verfahren funktioniert nicht
 	if (l_upper >= UNENDLICH)
 	{
-		throw invalid_argument("Kantengewichte des Basisgrpahen zu groß. Branch and Bound nicht anwendbar!");
+		throw invalid_argument("Kantengewichte des Basisgrpahen zu groï¿½. Branch and Bound nicht anwendbar!");
 	}
 
-	// Counter für Anzahl an Iterationen des B&B
+	// Counter fï¿½r Anzahl an Iterationen des B&B
 	size_t counter = 0;
 
 
-	// Für Subgradientenverfahren Knoten Grad zuordnen
+	// Fï¿½r Subgradientenverfahren Knoten Grad zuordnen
 	// Terminalknoten Grad = Grad des Demand-Demandgraphen (Anzahl der Demands)
 	// Nicht-Terminalknoten Grad = 2
 	vector<size_t> terminals_grad(base_graph.anzKnoten(), 2);
@@ -60,7 +60,7 @@ BranchBoundErgebnis branchAndBound(const Graph& base_graph, const Graph& demand_
 		// Terminal Indices im Base Graphen
 		size_t base_t = base_graph.iKnoten(t_name);
 
-		// Grad einfügen
+		// Grad einfï¿½gen
 		terminals_grad[base_t] = demand_graph.grad(t);
 	}
 
@@ -70,7 +70,7 @@ BranchBoundErgebnis branchAndBound(const Graph& base_graph, const Graph& demand_
 	warteschlangeBB.setObereSchranke(obere_schranke);
 
 
-	// Anfangsinstanzen für Warteschlange erzeugen
+	// Anfangsinstanzen fï¿½r Warteschlange erzeugen
 	BB_Instanz instanz_anfang;
 
 
@@ -78,10 +78,10 @@ BranchBoundErgebnis branchAndBound(const Graph& base_graph, const Graph& demand_
 	instanzTerminalsInitialisieren(base_graph, demand_graph, instanz_anfang);
 
 
-	// Startinstanz bilden 
+	// Startinstanz bilden
 	VerzweigungsErgebnis instanz_auswahl = instanzBilden(base_graph, instanz_anfang, base_graph.anzKnoten(), -1, terminals_grad, max_iter_sub, obere_schranke, n_iter_half, l_upper, lambda_option);
 
-	// Unzulässige oder suboptimale Lösung am Anfang -> es gibt keine Lösung
+	// Unzulï¿½ssige oder suboptimale Lï¿½sung am Anfang -> es gibt keine Lï¿½sung
 	if (instanz_auswahl.verzweigte_subinstanz[0].instanz_zustand == UNZULAESSIG
 		|| instanz_auswahl.verzweigte_subinstanz[0].untere_schranke >= obere_schranke)
 	{
@@ -89,7 +89,7 @@ BranchBoundErgebnis branchAndBound(const Graph& base_graph, const Graph& demand_
 	}
 
 
-	// Optimale Lösung am Anfang -> Ende des B&B
+	// Optimale Lï¿½sung am Anfang -> Ende des B&B
 	if (instanz_auswahl.verzweigte_subinstanz[0].instanz_zustand == OPTIMAL)
 	{
 		// Ergebnis initialisieren
@@ -98,11 +98,11 @@ BranchBoundErgebnis branchAndBound(const Graph& base_graph, const Graph& demand_
 		return ergebnis;
 	}
 
-	// Start Instanz zur Warteschlange hinzufügen (muss Kandidat sein)
+	// Start Instanz zur Warteschlange hinzufï¿½gen (muss Kandidat sein)
 	warteschlangeBB.push(instanz_auswahl.verzweigte_subinstanz[0]);
 
 
-	// Größen für Loop initialisieren 
+	// Grï¿½ï¿½en fï¿½r Loop initialisieren
 	double aktueller_wert = instanz_auswahl.verzweigte_subinstanz[0].untere_schranke;
 	BranchBoundErgebnis ergebnis_obere_schranke;
 	vector<vector<size_t>> wege_reihenfolge;
@@ -118,10 +118,10 @@ BranchBoundErgebnis branchAndBound(const Graph& base_graph, const Graph& demand_
 	VerzweigungsErgebnis verzweigte_subinstanzen;
 	double obere_schranke_kopie = warteschlangeBB.getObereSchranke();
 
-	// Solange Warteschlange noch nicht leer ist wird B&B ausgeführt
+	// Solange Warteschlange noch nicht leer ist wird B&B ausgefï¿½hrt
 	while (!warteschlangeBB.empty())
 	{
-		// Subinstanz mit kleinster unterer Schranke zum Verzweigen auswählen
+		// Subinstanz mit kleinster unterer Schranke zum Verzweigen auswï¿½hlen
 		verzweigende_subinstanz = warteschlangeBB.pop();
 
 		//Ausgabe der Kennwerte
@@ -143,7 +143,7 @@ BranchBoundErgebnis branchAndBound(const Graph& base_graph, const Graph& demand_
 		//Subinstanz am Verzweigungsknoten verzweigen
 		verzweigte_subinstanzen = instanzVerzweigen(base_graph, verzweigung_knoten.vzk, verzweigende_subinstanz, warteschlangeBB.getObereSchranke(), terminals_grad, max_iter_sub, n_iter_half, l_upper, lambda_option);
 
-		// Subinstanzen zur Warteschlange hinzufügen
+		// Subinstanzen zur Warteschlange hinzufï¿½gen
 		for (BB_Instanz element : verzweigte_subinstanzen.verzweigte_subinstanz)
 		{
 			warteschlangeBB.push(element);
@@ -153,7 +153,7 @@ BranchBoundErgebnis branchAndBound(const Graph& base_graph, const Graph& demand_
 		warteschlangeBB.updateObereSchranke(verzweigte_subinstanzen.gesamtkosten_zulaessig, verzweigte_subinstanzen.zulaessige_loesung);
 
 
-		// Wenn sich kleinste obere Schranke ändert -> Ausgabe der zulässigen Lösung
+		// Wenn sich kleinste obere Schranke ï¿½ndert -> Ausgabe der zulï¿½ssigen Lï¿½sung
 		if (warteschlangeBB.getObereSchranke() < obere_schranke_kopie)
 		{
 			// Ausgabe der neuen globalen oberen Schranke
@@ -161,7 +161,7 @@ BranchBoundErgebnis branchAndBound(const Graph& base_graph, const Graph& demand_
 			ergebnis_obere_schranke.distanz = warteschlangeBB.getObereSchranke();
 			cout << "Kleinste obere Schranke: " << ergebnis_obere_schranke.distanz << endl;
 
-			// Ausgabe der Wege der eingebetteten Demands als Kantenindices des Basisgraphen 
+			// Ausgabe der Wege der eingebetteten Demands als Kantenindices des Basisgraphen
 			ergebnis_obere_schranke.demand_wege_kanten = warteschlangeBB.getOptWegKanten();
 			wege_reihenfolge = kantenAusgabe(ergebnis_obere_schranke, base_graph, demand_graph);
 			cout << "Die Kantenindices der neuen oberen Schranke (zulaessige Loesung) sind: " << endl;
@@ -178,13 +178,13 @@ BranchBoundErgebnis branchAndBound(const Graph& base_graph, const Graph& demand_
 			cout << endl << endl;
 		}
 
-		// Update obere Schranke für die Ausgabe
+		// Update obere Schranke fï¿½r die Ausgabe
 		obere_schranke_kopie = warteschlangeBB.getObereSchranke();
 
 		counter++;
 	}
 
-	// Endergebnis initialisieren, wenn es eine optimale Lösung besitzt
+	// Endergebnis initialisieren, wenn es eine optimale Lï¿½sung besitzt
 	if (!warteschlangeBB.getOptWegKanten().empty())
 	{
 		ergebnis.distanz = warteschlangeBB.getObereSchranke();
@@ -218,14 +218,14 @@ void instanzTerminalsInitialisieren(const Graph& base_graph, const Graph& demand
 		instanz_anfang.alle_demands.push_back(paar);
 	}
 
-	// Anfangswerte für lambda für das Subgradientenverfahren festlegen
+	// Anfangswerte fï¿½r lambda fï¿½r das Subgradientenverfahren festlegen
 	vector<double> lambda_node(base_graph.anzKnoten(), 0);
 	instanz_anfang.lambda_node_start = lambda_node;
 }
 
 
 
-// Verzweigungsknoten auswählen
+// Verzweigungsknoten auswï¿½hlen
 VZK verzweigungKnotenBilden(const Graph& base_graph, const BB_Instanz& instanz_auswahl,
 	const vector<size_t>& terminals_grad, double obere_schranke, size_t batch_size,
 	size_t n_iter_half, double l_upper, const LambdaZustand& lambda_option,
@@ -235,14 +235,14 @@ VZK verzweigungKnotenBilden(const Graph& base_graph, const BB_Instanz& instanz_a
 	verzweigungs_knoten.gesamtkosten_zulaessig = obere_schranke;
 	verzweigungs_knoten.vzk = base_graph.anzKnoten();
 
-	// Suchen den Knoten, der die kleinste untere Schranke nach Verzweigung maximal erhöht
+	// Suchen den Knoten, der die kleinste untere Schranke nach Verzweigung maximal erhï¿½ht
 	double max_untere_schranke = (-1) * UNENDLICH;
 
-	// Größen für Loop, zum Suchen der kleinsten unteren Schranke nach Verzweigung
+	// Grï¿½ï¿½en fï¿½r Loop, zum Suchen der kleinsten unteren Schranke nach Verzweigung
 	double kleinster_weg_dist = UNENDLICH;
 	size_t knoten_kleinste_dist = base_graph.anzKnoten();
 
-	// Alle Kandidaten, die als Verzweigungsknoten möglich sind
+	// Alle Kandidaten, die als Verzweigungsknoten mï¿½glich sind
 	vector<size_t> weg_knoten = verzweigungsKnotenFinden(base_graph, instanz_auswahl, l_upper, verzweigung_option);
 	cout << weg_knoten.size() << endl;
 
@@ -253,10 +253,10 @@ VZK verzweigungKnotenBilden(const Graph& base_graph, const BB_Instanz& instanz_a
 		return verzweigungs_knoten;
 	}
 
-	// Jeden Verzweigungsknoten durchgehen 
-	// -> Verzweigung durchführen 
+	// Jeden Verzweigungsknoten durchgehen
+	// -> Verzweigung durchfï¿½hren
 	// -> kleinste untere Schranke nach Verzweigung bilden
-	// -> Speicher den Knoten, der nach Verzweigung größten Wert der kleinsten untere Schranke hat
+	// -> Speicher den Knoten, der nach Verzweigung grï¿½ï¿½ten Wert der kleinsten untere Schranke hat
 	for (size_t knoten : weg_knoten)
 	{
 		// Reset der Werte
@@ -268,8 +268,8 @@ VZK verzweigungKnotenBilden(const Graph& base_graph, const BB_Instanz& instanz_a
 			verzweigungs_knoten.gesamtkosten_zulaessig, terminals_grad, batch_size, n_iter_half, l_upper,
 			lambda_option);
 
-		// Speichern der zulässigen Lösung mit geringsten Gesamtkosten
-		// Update globale obere Schranke mit zulässiger Lösung
+		// Speichern der zulï¿½ssigen Lï¿½sung mit geringsten Gesamtkosten
+		// Update globale obere Schranke mit zulï¿½ssiger Lï¿½sung
 		if (!knoten_verzweigen.zulaessige_loesung.empty()
 			&& knoten_verzweigen.gesamtkosten_zulaessig < verzweigungs_knoten.gesamtkosten_zulaessig)
 		{
@@ -293,7 +293,7 @@ VZK verzweigungKnotenBilden(const Graph& base_graph, const BB_Instanz& instanz_a
 			break;
 		}
 
-		// Update Knoten mit größten Wert der kleinsten unteren Schranke nach Verzweigung 
+		// Update Knoten mit grï¿½ï¿½ten Wert der kleinsten unteren Schranke nach Verzweigung
 		if (kleinster_weg_dist > max_untere_schranke)
 		{
 			max_untere_schranke = kleinster_weg_dist;
@@ -301,7 +301,7 @@ VZK verzweigungKnotenBilden(const Graph& base_graph, const BB_Instanz& instanz_a
 		}
 	}
 
-	// Sollte kein Knoten gefunden werden, einfach letzten Knoten wählen
+	// Sollte kein Knoten gefunden werden, einfach letzten Knoten wï¿½hlen
 	if (verzweigungs_knoten.vzk == base_graph.anzKnoten())
 	{
 		verzweigungs_knoten.vzk = knoten_kleinste_dist;
@@ -311,7 +311,7 @@ VZK verzweigungKnotenBilden(const Graph& base_graph, const BB_Instanz& instanz_a
 }
 
 
-// Kandidaten für Verwzeigungsknoten
+// Kandidaten fï¿½r Verwzeigungsknoten
 vector<size_t> verzweigungsKnotenFinden(const Graph& base_graph, const BB_Instanz& neue_instanz, double l_upper, const VerzweigungZustand& verzweigung_option)
 {
 	// Kanten- und Knotengewichte initialisieren
@@ -319,7 +319,7 @@ vector<size_t> verzweigungsKnotenFinden(const Graph& base_graph, const BB_Instan
 	vector<double> lambda_edge_neu(base_graph.anzKanten(), 0);
 	lambdaEdgeInitialisieren(base_graph, lambda_edge, lambda_edge_neu, neue_instanz.lambda_node_start, neue_instanz.geloeschte_knoten, l_upper);
 
-	// Alle Terminalknoten im Set speichern 
+	// Alle Terminalknoten im Set speichern
 	unordered_set<size_t> alle_terminal_knoten;
 	for (const pair<size_t, size_t>& terminal_z : neue_instanz.alle_demands)
 	{
@@ -327,12 +327,12 @@ vector<size_t> verzweigungsKnotenFinden(const Graph& base_graph, const BB_Instan
 		alle_terminal_knoten.insert(terminal_z.second);
 	}
 
-	// Wegknoten, Verzweigungsknoten und Flusszähler in jeden Knoten
+	// Wegknoten, Verzweigungsknoten und Flusszï¿½hler in jeden Knoten
 	unordered_set<size_t> weg_knoten;
 	vector<size_t> weg_knoten_counter(base_graph.anzKnoten(), 0);
 	vector<size_t> verzweigungs_knoten;
 
-	// Knoten mit Weg maximaler Länge und Knoten mit max. Fluss speichern
+	// Knoten mit Weg maximaler Lï¿½nge und Knoten mit max. Fluss speichern
 	size_t demand_weg_laenge_max = 0;
 	size_t knoten_demand_weg_laenge_max = base_graph.anzKnoten();
 	size_t max_fluss = 0;
@@ -345,7 +345,7 @@ vector<size_t> verzweigungsKnotenFinden(const Graph& base_graph, const BB_Instan
 		size_t start = terminal.first;
 		size_t ende = terminal.second;
 
-		// Terminals nicht betretbar, außer Start- und Endterminal
+		// Terminals nicht betretbar, auï¿½er Start- und Endterminal
 		for (size_t terminal_knoten : alle_terminal_knoten)
 		{
 			if (terminal_knoten != start && terminal_knoten != ende)
@@ -370,13 +370,13 @@ vector<size_t> verzweigungsKnotenFinden(const Graph& base_graph, const BB_Instan
 			}
 		}
 
-		// Längsten Dijkstra-Weg ermitteln -> davon mittleren Knoten -> mindestens 3 Knoten im Weg
+		// Lï¿½ngsten Dijkstra-Weg ermitteln -> davon mittleren Knoten -> mindestens 3 Knoten im Weg
 		if (gefundener_weg.weg_knoten.size() > demand_weg_laenge_max
 			&& gefundener_weg.weg_knoten.size() > 2)
 		{
 			demand_weg_laenge_max = gefundener_weg.weg_knoten.size();
 
-			// Von dem längsten Weg mittleren Knoten speichern
+			// Von dem lï¿½ngsten Weg mittleren Knoten speichern
 			knoten_demand_weg_laenge_max = gefundener_weg.weg_knoten[int((gefundener_weg.weg_knoten.size() - 1) / 2)];
 		}
 
@@ -397,7 +397,7 @@ vector<size_t> verzweigungsKnotenFinden(const Graph& base_graph, const BB_Instan
 		}
 
 
-		//Alle gelöschten Terminal-Knoten wieder zurücksetzen
+		//Alle gelï¿½schten Terminal-Knoten wieder zurï¿½cksetzen
 		lambda_edge = lambda_edge_neu;
 	}
 
@@ -420,7 +420,7 @@ vector<size_t> verzweigungsKnotenFinden(const Graph& base_graph, const BB_Instan
 	}
 	else if (verzweigung_option == WEG)
 	{
-		//Mittlerer Knoten des längsten Weges des eingebetteten Demands
+		//Mittlerer Knoten des lï¿½ngsten Weges des eingebetteten Demands
 		if (knoten_demand_weg_laenge_max != base_graph.anzKnoten())
 		{
 			verzweigungs_knoten.push_back(knoten_demand_weg_laenge_max);
@@ -433,7 +433,7 @@ vector<size_t> verzweigungsKnotenFinden(const Graph& base_graph, const BB_Instan
 	}
 	else
 	{
-		// Nur mehrfach durchflossene wählbare Wegknoten als Kandidaten für Verzweigungsknoten wählen
+		// Nur mehrfach durchflossene wï¿½hlbare Wegknoten als Kandidaten fï¿½r Verzweigungsknoten wï¿½hlen
 		size_t anzahl = 0;
 		for (size_t knoten : weg_knoten)
 		{
@@ -444,10 +444,10 @@ vector<size_t> verzweigungsKnotenFinden(const Graph& base_graph, const BB_Instan
 			}
 		}
 
-		// Spezialfall zulässige Lösung -> keine Konflikte
+		// Spezialfall zulï¿½ssige Lï¿½sung -> keine Konflikte
 		if (verzweigungs_knoten.empty())
 		{
-			//Mittlerer Knoten des längsten Weges des eingebetteten Demands
+			//Mittlerer Knoten des lï¿½ngsten Weges des eingebetteten Demands
 			if (knoten_demand_weg_laenge_max != base_graph.anzKnoten())
 			{
 				verzweigungs_knoten.push_back(knoten_demand_weg_laenge_max);
@@ -467,24 +467,24 @@ vector<size_t> verzweigungsKnotenFinden(const Graph& base_graph, const BB_Instan
 // Wahl eines beliebigen Verzweigungsknotens
 size_t beliebigerVerzweigungsKnoten(const Graph& base_graph, const BB_Instanz& instanz_auswahl)
 {
-	// Es muss mindestens ein weiterer nicht gelöschter Nicht-Terminalknoten existieren,
-	// sonst wäre keine Verzweigung möglich gewesen
+	// Es muss mindestens ein weiterer nicht gelï¿½schter Nicht-Terminalknoten existieren,
+	// sonst wï¿½re keine Verzweigung mï¿½glich gewesen
 	unordered_set<size_t> alle_nicht_waehlbaren_knoten;
 
-	// Alle Terminals nicht wählbar
+	// Alle Terminals nicht wï¿½hlbar
 	for (const pair<size_t, size_t>& terminal_z : instanz_auswahl.alle_demands)
 	{
 		alle_nicht_waehlbaren_knoten.insert(terminal_z.first);
 		alle_nicht_waehlbaren_knoten.insert(terminal_z.second);
 	}
 
-	// Alle gelöschten Knoten nicht wählbar
+	// Alle gelï¿½schten Knoten nicht wï¿½hlbar
 	for (size_t element : instanz_auswahl.geloeschte_knoten)
 	{
 		alle_nicht_waehlbaren_knoten.insert(element);
 	}
 
-	// Wähle ersten Knoten aus Basis-Graphen der nicht in alle_nicht_waehlbaren_knoten ist
+	// Wï¿½hle ersten Knoten aus Basis-Graphen der nicht in alle_nicht_waehlbaren_knoten ist
 	for (size_t beliebiger_knoten = 0; beliebiger_knoten < base_graph.anzKnoten(); ++beliebiger_knoten)
 	{
 		if (alle_nicht_waehlbaren_knoten.find(beliebiger_knoten) == alle_nicht_waehlbaren_knoten.end())
@@ -492,6 +492,7 @@ size_t beliebigerVerzweigungsKnoten(const Graph& base_graph, const BB_Instanz& i
 			return beliebiger_knoten;
 		}
 	}
+  return base_graph.anzKnoten(); // sollte nie erreicht werden
 }
 
 
@@ -505,14 +506,14 @@ VerzweigungsErgebnis instanzVerzweigen(const Graph& base_graph, size_t verzweigu
 	ergebnis.gesamtkosten_zulaessig = obere_schranke;
 
 
-	// Verzweigungsknoten als Zwischenterminal jedes Demands einfügen oder  Verzweigungsknoten löschen
+	// Verzweigungsknoten als Zwischenterminal jedes Demands einfï¿½gen oder  Verzweigungsknoten lï¿½schen
 	// -> Neue Subinstanzen erzeugen
 	for (int i = 0; i <= instanz_auswahl.alle_demands.size(); i++)
 	{
 		// neue Subinstanz bilden
 		VerzweigungsErgebnis neue_instanz = instanzBilden(base_graph, instanz_auswahl, verzweigung_knoten, i, terminals_grad, max_iter_sub, ergebnis.gesamtkosten_zulaessig, n_iter_half, l_upper, lambda_option);
 
-		// Update globale obere Schranke mit zulässiger Lösung
+		// Update globale obere Schranke mit zulï¿½ssiger Lï¿½sung
 		if (!neue_instanz.zulaessige_loesung.empty()
 			&& neue_instanz.gesamtkosten_zulaessig < ergebnis.gesamtkosten_zulaessig)
 		{
@@ -521,7 +522,7 @@ VerzweigungsErgebnis instanzVerzweigen(const Graph& base_graph, size_t verzweigu
 		}
 
 		// Sammeln der verzweigbaren Subinstanzen
-		// Untere Schranke = obere Schranke -> optimale Lösung der Subinstanz -> ist nicht Kandidat
+		// Untere Schranke = obere Schranke -> optimale Lï¿½sung der Subinstanz -> ist nicht Kandidat
 		if (neue_instanz.verzweigte_subinstanz[0].instanz_zustand == KANDIDAT
 			&& neue_instanz.verzweigte_subinstanz[0].untere_schranke < ergebnis.gesamtkosten_zulaessig)
 		{
@@ -543,16 +544,16 @@ VerzweigungsErgebnis instanzBilden(const Graph& base_graph, const BB_Instanz& in
 	neue_instanz.setAttribut(instanz_auswahl.alle_demands, instanz_auswahl.geloeschte_knoten, 0, KANDIDAT, instanz_auswahl.lambda_node_start);
 
 
-	// Verzweigungsknoten in Subinstanz einfügen
+	// Verzweigungsknoten in Subinstanz einfï¿½gen
 	if (demand_index == -1)
 	{
 		// Kein Verzweigungsknoten (Gesamtinstanz)
 	}
 	else if (demand_index < instanz_auswahl.alle_demands.size())
 	{
-		// Verzweigungsknoten als Zwischenterminal einfügen
+		// Verzweigungsknoten als Zwischenterminal einfï¿½gen
 		// Neues Terminal bei demand_index geht vom Start zum Verzweigungsknoten und vom Verzweigungsknoten zum Ende
-		// es werden 2 demands eingefügt und alter demand gelöscht
+		// es werden 2 demands eingefï¿½gt und alter demand gelï¿½scht
 		pair<size_t, size_t> terminal = instanz_auswahl.alle_demands[demand_index];
 		neue_instanz.alle_demands.erase(neue_instanz.alle_demands.begin() + demand_index);
 		neue_instanz.alle_demands.push_back(make_pair(terminal.first, verzweigung_knoten));
@@ -560,7 +561,7 @@ VerzweigungsErgebnis instanzBilden(const Graph& base_graph, const BB_Instanz& in
 	}
 	else
 	{
-		// Verzweigungsknoten wird gelöscht
+		// Verzweigungsknoten wird gelï¿½scht
 		neue_instanz.geloeschte_knoten.push_back(verzweigung_knoten);
 	}
 
@@ -595,7 +596,7 @@ VerzweigungsErgebnis instanzBilden(const Graph& base_graph, const BB_Instanz& in
 
 
 
-// Ausgabe der Kanten der optimalen Lösung -----------------------------------------------
+// Ausgabe der Kanten der optimalen Lï¿½sung -----------------------------------------------
 vector<vector<size_t>> kantenAusgabe(const BranchBoundErgebnis& ergebnis, const Graph& base_graph, const Graph& demand_graph)
 {
 	// Kanten und Knoten der Terminals im Basis-Graphen speichern
@@ -638,14 +639,14 @@ vector<vector<size_t>> kantenAusgabe(const BranchBoundErgebnis& ergebnis, const 
 	size_t naechste_kante = base_graph.anzKanten();
 
 
-	// Alle Weg Kanten der demands der Lösung durchgehen
-	// Terminalkanten identifizieren -> Start des Weges für den Demand
-	// Knoten der Terminalkante zur nächster Wegkante identifizieren und nächste Kante finden
+	// Alle Weg Kanten der demands der Lï¿½sung durchgehen
+	// Terminalkanten identifizieren -> Start des Weges fï¿½r den Demand
+	// Knoten der Terminalkante zur nï¿½chster Wegkante identifizieren und nï¿½chste Kante finden
 	// gelangt man wieder zu einer Terminalkante -> Ende des Weges
 
 	for (size_t kante : alle_demand_weg_kanten)
 	{
-		// Ist erste Kante Terminal-Kante und noch für keinen Weg verwendet worden, so beginnt dort der Weg
+		// Ist erste Kante Terminal-Kante und noch fï¿½r keinen Weg verwendet worden, so beginnt dort der Weg
 		if (terminal_kanten.find(kante) != terminal_kanten.end()
 			&& schon_gesetzte_wegkanten.find(kante) == schon_gesetzte_wegkanten.end())
 		{
@@ -656,24 +657,24 @@ vector<vector<size_t>> kantenAusgabe(const BranchBoundErgebnis& ergebnis, const 
 			naechste_kante = base_graph.anzKanten();
 			weg.clear();
 
-			// Terminalkante als Start hinzufügen zum Weg
+			// Terminalkante als Start hinzufï¿½gen zum Weg
 			weg.push_back(kante);
 			schon_gesetzte_wegkanten.insert(kante);
 
-			// Fussknoten, Kopfknoten der Kante ermitteln -> Anfangsknoten der nächsten Kante (wahl_knoten)
+			// Fussknoten, Kopfknoten der Kante ermitteln -> Anfangsknoten der nï¿½chsten Kante (wahl_knoten)
 			fuss_knoten = base_graph.kante(kante).iFuss();
 			kopf_knoten = base_graph.kante(kante).iKopf();
 
 
 			// Wenn beide Knoten Terminalknoten sind -> Weg zu Ende mit einer Kante
-			// Andernfalls führt Weg weiter
+			// Andernfalls fï¿½hrt Weg weiter
 			if (terminal_knoten.find(fuss_knoten) == terminal_knoten.end()
 				|| terminal_knoten.find(kopf_knoten) == terminal_knoten.end())
 			{
-				// Nächste Kante des Weges finden mit dem Knoten, der kein Terminalknoten ist (wahl_knoten)
+				// Nï¿½chste Kante des Weges finden mit dem Knoten, der kein Terminalknoten ist (wahl_knoten)
 				wahl_knoten = (terminal_knoten.find(fuss_knoten) == terminal_knoten.end()) ? (fuss_knoten) : (kopf_knoten);
 
-				// Nächste Kante des Weges ist in Kante zu Nachbar des Wahlknotens
+				// Nï¿½chste Kante des Weges ist in Kante zu Nachbar des Wahlknotens
 				FUER_ALLE_NACHBARN(n, base_graph, wahl_knoten)
 				{
 					// Kanten darf noch nicht Teil eines Weges sein und muss Teil der Demand Kantenmenge sein
@@ -681,8 +682,8 @@ vector<vector<size_t>> kantenAusgabe(const BranchBoundErgebnis& ergebnis, const 
 					if (schon_gesetzte_wegkanten.find(n.j()) == schon_gesetzte_wegkanten.end()
 						&& alle_demand_weg_kanten.find(n.j()) != alle_demand_weg_kanten.end())
 					{
-						// Nächste Kante des Weges bestimmen und hinzufügen
-						// Nächster Knoten ist automatisch Nachbarknoten (wahl_knoten)
+						// Nï¿½chste Kante des Weges bestimmen und hinzufï¿½gen
+						// Nï¿½chster Knoten ist automatisch Nachbarknoten (wahl_knoten)
 						naechste_kante = n.j();
 						wahl_knoten = n.i();
 						weg.push_back(naechste_kante);
@@ -692,10 +693,10 @@ vector<vector<size_t>> kantenAusgabe(const BranchBoundErgebnis& ergebnis, const 
 				}
 
 
-				// Solange nächste Kante keine Terminalkante ist, endet der Weg nicht
+				// Solange nï¿½chste Kante keine Terminalkante ist, endet der Weg nicht
 				while (terminal_kanten.find(naechste_kante) == terminal_kanten.end())
 				{
-					// Nächste Kante des Weges ist in Kante zu Nachbar des Wahlknotens
+					// Nï¿½chste Kante des Weges ist in Kante zu Nachbar des Wahlknotens
 					FUER_ALLE_NACHBARN(n, base_graph, wahl_knoten)
 					{
 						// Kanten darf noch nicht Teil eines Weges sein und muss Teil der Demand Kantenmenge sein
@@ -713,13 +714,13 @@ vector<vector<size_t>> kantenAusgabe(const BranchBoundErgebnis& ergebnis, const 
 				}
 			}
 
-			// Weg wurde aus Kanten erstellt -> eingebetteter Weg zu erstellte_wege hinzufügen
+			// Weg wurde aus Kanten erstellt -> eingebetteter Weg zu erstellte_wege hinzufï¿½gen
 			erstellte_wege.push_back(weg);
 		}
 	}
 
 
-	// Wege in die Reihenfolge der Demands im Demand-Graphen bringen -> jedem Demand lässt sich eindeutig Weg zuordnen
+	// Wege in die Reihenfolge der Demands im Demand-Graphen bringen -> jedem Demand lï¿½sst sich eindeutig Weg zuordnen
 	vector<vector<size_t>> wege_reihenfolge;
 	unordered_set<size_t> alle_knoten;
 
@@ -750,7 +751,7 @@ vector<vector<size_t>> kantenAusgabe(const BranchBoundErgebnis& ergebnis, const 
 			size_t letzter_fuss = base_graph.kante(letzte_kante).iFuss();
 			size_t letzter_kopf = base_graph.kante(letzte_kante).iKopf();
 
-			// Fuß- und Kopfknoten von erster und letzter Kante in Menge vereinigen
+			// Fuï¿½- und Kopfknoten von erster und letzter Kante in Menge vereinigen
 			alle_knoten.clear();
 			alle_knoten.insert(erster_fuss);
 			alle_knoten.insert(erster_kopf);
@@ -758,7 +759,7 @@ vector<vector<size_t>> kantenAusgabe(const BranchBoundErgebnis& ergebnis, const 
 			alle_knoten.insert(letzter_kopf);
 
 			// Wenn base_start und base_end sich in alle_knoten befinden
-			// -> das ist der Weg für diesen demand
+			// -> das ist der Weg fï¿½r diesen demand
 			if (alle_knoten.find(base_start) != alle_knoten.end()
 				&& alle_knoten.find(base_end) != alle_knoten.end())
 			{
@@ -770,4 +771,3 @@ vector<vector<size_t>> kantenAusgabe(const BranchBoundErgebnis& ergebnis, const 
 
 	return wege_reihenfolge;
 }
-

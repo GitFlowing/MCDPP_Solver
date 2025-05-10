@@ -5,10 +5,11 @@
 #include <vector>
 #include <iterator>
 #include <list>
+#include <algorithm>
 using namespace std;
 
 /**
- * Klasse für Prioritätswarteschlange Dijkstra-Algorithmus
+ * Klasse fï¿½r Prioritï¿½tswarteschlange Dijkstra-Algorithmus
 **/
 
 
@@ -24,7 +25,7 @@ class Warteschlange
 public:
 	/***  Konstruktor  ***/
 
-	// Konstruktor mit Vergleichsmetrik für Warteschlange
+	// Konstruktor mit Vergleichsmetrik fï¿½r Warteschlange
 	explicit Warteschlange(vector<double>* dist) : _vergleichs_metrik(dist)
 	{
 		if (_vergleichs_metrik == nullptr) {
@@ -48,7 +49,7 @@ public:
 		return _warteschlange.empty();
 	}
 
-	// gib Anzahl Einträge im Warteschlange aus
+	// gib Anzahl Eintrï¿½ge im Warteschlange aus
 	size_t size() const
 	{
 		return _warteschlange.size();
@@ -58,21 +59,21 @@ public:
 	/***  set-Methoden  ***/
 
 	// Eintrag = Index des Vectors der vergleichs_metrik
-	// füge Eintrag sortiert nach vergleichs_metrik  in Warteschlange ein
+	// fï¿½ge Eintrag sortiert nach vergleichs_metrik  in Warteschlange ein
 	// wenn Eintrag vorhanden sortiere Warteschlange neu (update)
 	void push(size_t eintrag)
 	{
 		// Existiert Element in Warteschlange
 		list<size_t>::iterator existiert = find(_warteschlange.begin(), _warteschlange.end(), eintrag);
 
-		// Knoten existiert -> Knoten löschen
+		// Knoten existiert -> Knoten lï¿½schen
 		if (existiert != _warteschlange.end())
 		{
 			_warteschlange.erase(existiert);
 		}
 
-		// Neuen Knoten einfügen
-		// Warteschlange durchitterieren und Knoten nach vergleichsmetrik aufsteigend sortiert einfügen
+		// Neuen Knoten einfï¿½gen
+		// Warteschlange durchitterieren und Knoten nach vergleichsmetrik aufsteigend sortiert einfï¿½gen
 		list<size_t>::iterator it;
 		for (it = _warteschlange.begin(); it != _warteschlange.end(); ++it)
 		{
@@ -83,19 +84,19 @@ public:
 			}
 		}
 
-		// An letzter Stelle einfügen
+		// An letzter Stelle einfï¿½gen
 		if (it == _warteschlange.end())
 		{
 			_warteschlange.push_back(eintrag);
 		}
 	}
 
-	// nehme obersten Eintrag aus Warteschlange heraus und gebe ihn zurück
+	// nehme obersten Eintrag aus Warteschlange heraus und gebe ihn zurï¿½ck
 	size_t pop()
 	{
 		if (empty())
 		{
-			throw std::runtime_error("Ungueltige Aktion: pop darf nicht bei leerer Warteschalnge ausgeführt werden.");
+			throw std::runtime_error("Ungueltige Aktion: pop darf nicht bei leerer Warteschalnge ausgefï¿½hrt werden.");
 		}
 
 		size_t ergebnis = _warteschlange.front();
