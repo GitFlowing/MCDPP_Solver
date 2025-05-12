@@ -2,6 +2,15 @@ from fastapi import FastAPI, UploadFile, File
 import subprocess
 import os
 
+
+# TODO: create and test a docker image
+# TODO: Docker an gcp schicken + timeout option beachten + Dauer der Berechnung auf Server beachten
+# TODO: Streamlit App API Call für Solver erstellen
+# TODO: Webseite in Lebenslauf packen wie AI Tutor
+# TODO: troopl Projekt Webseite hinzufügen
+
+
+
 # Create Fast API
 app = FastAPI()
 
@@ -97,13 +106,21 @@ def execute_MCDPP(
           choose the node with the maximum lower bound for the next branch node
 
     It constructs the command to run the solver and captures the solution of
-    the solver in ergebnis_output.txt file.
+    the solver in ergebnis_output.txt file. From that a dictionary is created
+    with the following keys:
+    - time: Time of the solver in seconds
+    - total_cost: Total cost of the solution
+    - paths: List of paths in the solution, where each path is a list of edge indices
     """
 
 
 
     # Path to the .exe file for solving Minimum Cost Disjoint Path Problem (MCDPP)
     exe_path = os.path.join(CURRENT_DIR, './mcdpp')
+
+    # Erase content of the output file
+    with open('ergebnis_output.txt', "w") as file:
+        file.write("")
 
     # Execute solver
     subprocess.run([exe_path,
@@ -126,4 +143,44 @@ def execute_MCDPP(
     except FileNotFoundError:
         result = "Output file not found. Please check the solver execution."
 
-    return result
+    # Turn result into a dictionary
+    result_dict = {}
+    result_dict["time"] = -1
+    result_dict["total_cost"] = -1
+    result_dict["paths"] = []
+    paths = []
+    counter = 0
+
+    if result != "" and result != "Output file not found. Please check the solver execution.":
+        lines = result.split('\n')
+        for line in lines:
+            if line.startswith("MCDPP besitzt keine Loesung."):
+                # MCDPP has no solution
+                result_dict["total_cost"] = -1
+                result_dict["paths"] = []
+                return result_dict
+            elif line.strip() == "":
+                # skip empty lines
+                continue
+            elif counter == 0:
+                # read time of the solver
+                result_dict["time"] = float(line.strip().split()[-1])
+                counter += 1
+            elif counter == 1:
+                # read total cost
+                result_dict["total_cost"] = float(line.strip().split()[-1])
+                counter += 1
+            elif counter == 2:
+                # jump over text
+                counter += 1
+                continue
+            else:
+                # read paths
+                parts = line.strip().split()
+                path = [int(x) for x in parts]
+                paths.append(path)
+
+    # append paths to result
+    result_dict['paths'] = paths
+
+    return result_dict

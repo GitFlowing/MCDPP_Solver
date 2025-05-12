@@ -1,8 +1,9 @@
 import streamlit as st
-from MCDPPExecution.execute_MCDPP import execute_MCDPP_solver, plot_graph, extract_solution
+from MCDPPExecution.execute_MCDPP import plot_graph
 import os
 import matplotlib.pyplot as plt
 from PIL import Image
+import requests
 
 
 # TODO: Implement side bar with: MCDPP, MCDPP Solver, Create own MCDPP instance
@@ -304,12 +305,12 @@ if option == "MCDPP Solver":
             f.write(file_contents)
 
         # plot file base graph and demand graph
-        fig_base = plot_graph(save_base_path, save_demand_path, sol_path="",
+        fig_base = plot_graph(save_base_path, save_demand_path,
                          fig_size_x=fig_size_x, fig_size_y=fig_size_y, fig_dpi=fig_dpi,
                         node_size=node_size, edge_size=edge_size, terminal_size=terminal_size,
                         edge_labels=edge_labels, edge_lables_size=edge_labels_size,
                         edge_lable_pos=edge_label_pos)
-        fig_demand = plot_graph(save_demand_path, save_demand_path, sol_path="",
+        fig_demand = plot_graph(save_demand_path, save_demand_path,
                         fig_size_x=fig_size_x, fig_size_y=fig_size_y, fig_dpi=fig_dpi,
                         node_size=node_size, edge_size=edge_size, terminal_size=terminal_size,
                         edge_labels=edge_labels, edge_lables_size=edge_labels_size,
@@ -338,40 +339,59 @@ if option == "MCDPP Solver":
     # Solver
     if st.button("Run solver"):
         if base_graph_file is not None and demand_graph_file is not None:
-            # Run solver
-            execute_MCDPP_solver(save_base_path,
-                                 save_demand_path,
-                                 n_sub,
-                                 n_iter_half,
-                                 n_sub_variant,
-                                 lambda_option,
-                                 VZK_option)
+            # Upload base graph and demand graph
+            base_response = None
+            demand_response = None
 
-            result_time = -1
-            result_costs = -1
+            with open(save_base_path, "rb") as open_file:
+                base_response = requests.post(
+                                st.secrets['base_graph_api'],
+                                files={"file": open_file}
+                                )
+            with open(save_demand_path, "rb") as open_file:
+                demand_response = requests.post(
+                                st.secrets['demand_graph_api'],
+                                files={"file": open_file})
 
-            # Does solution exists
-            solution_exists = True
-            with open("ergebnis_output.txt", 'r') as file:
-                for line in file:
-                    if line.startswith("Zeit in s:"):
-                        result_time = line.split(":")[1].strip()
-                    if line.startswith("MCDPP besitzt keine Loesung."):
-                        solution_exists = False
-                        break
+
+            # Run solver via API
+            solver_response = None
+            params = {
+                        'n_sub': int(n_sub),
+                        'n_iter_half': int(n_iter_half),
+                        'n_sub_variant': int(n_sub_variant),
+                        'lambda_option': int(lambda_option),
+                        'VZK_option': int(VZK_option)
+                    }
+
+            if base_response.status_code == 200 and demand_response.status_code == 200:
+                solver_response = requests.get(st.secrets['solver_api'], params=params)
+            else:
+                print("Error: Failed to upload files.")
+
+            solver_result = solver_response.json() if solver_response.status_code == 200 else None
+
+            # show solver results
+            result_time = "N/A"
+            result_costs = "N/A"
+            if solver_result:
+                result_time = solver_result.get("time", "N/A")
+                result_costs = solver_result.get("total_cost", "N/A")
+            else:
+                st.error("Error: Failed to execute the solver.")
+
 
             # Create graphs, when solution exists
             st.markdown("## Result:")
             st.write(f"Time of the solver in s: {result_time}")
 
-            if solution_exists:
-                # costs of optimal solution
-                result = extract_solution('ergebnis_output.txt')
-                result_costs = result['total_cost']
+            # MCDPP has a solution
+            if result_costs != "N/A" and result_costs != -1:
+
                 st.write(f"Total cost of the solution: {result_costs}")
 
                 #plot solution
-                fig = plot_graph(save_base_path, save_demand_path, sol_path="ergebnis_output.txt",
+                fig = plot_graph(save_base_path, save_demand_path, result_dict=solver_result,
                                 fig_size_x=fig_size_x, fig_size_y=fig_size_y, fig_dpi=fig_dpi,
                                 node_size=node_size, edge_size=edge_size, terminal_size=terminal_size,
                                 edge_labels=edge_labels, edge_lables_size=edge_labels_size,
@@ -380,98 +400,6 @@ if option == "MCDPP Solver":
                 st.pyplot(fig)
 
             else:
-                st.write("No solution exists for this instance.")
+                st.write("MCDPP has no solution for this instance.")
         else:
             st.warning("Please upload both base graph and demand graph.")
-
-    # Run solver
-    # execute_MCDPP_solver(base_graph_path,
-    #                     demand_graph_path,
-    #                     n_sub,
-    #                     n_iter_half,
-    #                     n_sub_variant,
-    #                     lambda_option,
-    #                     VZK_option)
-
-
-
-
-    #  # Current directory path
-    # current_dir = os.path.dirname(os.path.abspath(__file__))
-    # parent_dir = os.path.join(current_dir, os.pardir)
-
-
-    # # Paths to base graph and demand graph files as arguments for solver
-    # base_graph = 'beispielBesser.gra'
-    # demand_graph = 'bedarf3ohneKap.gra'
-    # base_graph_path = os.path.join(parent_dir, 'Testdateien', base_graph)
-    # demand_graph_path = os.path.join(parent_dir, 'Testdateien', demand_graph)
-
-    # # Solver attributes
-    # n_sub = 200
-    # n_iter_half = 10
-    # n_sub_variant = 40
-    # lambda_option = 2
-    # VZK_option = 1
-
-    # # Run solver
-    # execute_MCDPP_solver(base_graph_path,
-    #                     demand_graph_path,
-    #                     n_sub,
-    #                     n_iter_half,
-    #                     n_sub_variant,
-    #                     lambda_option,
-    #                     VZK_option)
-
-    # # Does solution exists
-    # solution_exists = True
-    # with open("ergebnis_output.txt", 'r') as file:
-    #     for line in file:
-    #         if line.startswith("MCDPP besitzt keine Loesung."):
-    #             solution_exists = False
-    #             break
-
-    # # Create graphs, when solution exists
-    # if solution_exists:
-    #     fig = plot_graph(base_graph_path, demand_graph_path, sol_path="ergebnis_output.txt",
-    #                     edge_labels=True, edge_lables_size=30, edge_lable_pos=0.3)
-    #     fig.savefig("graph.jpg", format="jpg")
-
-
-
-
-
-# Draw test instances
-# if option_simple != 'no instance':
-
-#     # Paths to base graph and demand graph files as arguments for solver
-
-#     base_graph_path = os.path.join(current_dir, 'Testdateien', base_graph)
-#     demand_graph_path = os.path.join(current_dir, 'Testdateien', demand_graph)
-
-#     # Solver attributes
-#     n_sub = 200
-#     n_iter_half = 10
-#     n_sub_variant = 40
-#     lambda_option = 2
-#     VZK_option = 1
-
-#     # Run solver
-#     execute_MCDPP_solver(base_graph_path,
-#                         demand_graph_path,
-#                         n_sub,
-#                         n_iter_half,
-#                         n_sub_variant,
-#                         lambda_option,
-#                         VZK_option)
-
-#     # Create graphs
-#     fig_base = plot_graph(base_graph_path, demand_graph_path, sol_path="")
-#     fig_demand = plot_graph(demand_graph_path, demand_graph_path, sol_path="")
-#     fig_sol = plot_graph(base_graph_path, demand_graph_path, sol_path="ergebnis_output.txt")
-#     st.write("Base graph:")
-#     st.pyplot(fig_base)
-#     st.write("Demand graph:")
-#     st.pyplot(fig_demand)
-#     st.write("Base Graph with embedded solution:")
-#     st.pyplot(fig_sol)

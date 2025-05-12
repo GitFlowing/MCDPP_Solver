@@ -24,7 +24,11 @@ def execute_MCDPP_solver(base_graph, demand_graph, n_sub, n_iter_half, n_sub_var
           choose the node with the maximum lower bound for the next branch node
 
     It constructs the command to run the solver and captures the solution of
-    the solver in ergebnis_output.txt file.
+    the solver in ergebnis_output.txt file. From that a dictionary is created
+    with the following keys:
+    - time: Time of the solver in seconds
+    - total_cost: Total cost of the solution
+    - paths: List of paths in the solution, where each path is a list of edge indices
     """
 
     # Current directory path
@@ -33,17 +37,72 @@ def execute_MCDPP_solver(base_graph, demand_graph, n_sub, n_iter_half, n_sub_var
     # Path to the .exe file for solving Minimum Cost Disjoint Path Problem (MCDPP)
     exe_path = os.path.join(current_dir, './mcdpp')
 
-    # Execute solver
-    result = subprocess.run([exe_path,
-                            str(base_graph),
-                            str(demand_graph),
-                            str(n_sub),
-                            str(n_iter_half),
-                            str(n_sub_variant),
-                            str(lambda_option),
-                            str(VZK_option)])
+    # Erase content of the output file
+    with open('ergebnis_output.txt', "w") as file:
+        file.write("")
 
-    return True
+    # Execute solver -> it creates the output file
+    subprocess.run([exe_path,
+                    str(base_graph),
+                    str(demand_graph),
+                    str(n_sub),
+                    str(n_iter_half),
+                    str(n_sub_variant),
+                    str(lambda_option),
+                    str(VZK_option)])
+
+
+    # Read the output file
+    output_file_path = os.path.join(current_dir, 'ergebnis_output.txt')
+    result = ""
+
+    try:
+        with open(output_file_path, 'r') as file:
+            result = file.read()
+    except FileNotFoundError:
+        result = "Output file not found. Please check the solver execution."
+
+    # Turn result into a dictionary
+    result_dict = {}
+    result_dict["time"] = -1
+    result_dict["total_cost"] = -1
+    result_dict["paths"] = []
+    paths = []
+    counter = 0
+
+    if result != "" and result != "Output file not found. Please check the solver execution.":
+        lines = result.split('\n')
+        for line in lines:
+            if line.startswith("MCDPP besitzt keine Loesung."):
+                # MCDPP has no solution
+                result_dict["total_cost"] = -1
+                result_dict["paths"] = []
+                return result_dict
+            elif line.strip() == "":
+                # skip empty lines
+                continue
+            elif counter == 0:
+                # read time of the solver
+                result_dict["time"] = float(line.strip().split()[-1])
+                counter += 1
+            elif counter == 1:
+                # read total cost
+                result_dict["total_cost"] = float(line.strip().split()[-1])
+                counter += 1
+            elif counter == 2:
+                # jump over text
+                counter += 1
+                continue
+            else:
+                # read paths
+                parts = line.strip().split()
+                path = [int(x) for x in parts]
+                paths.append(path)
+
+    # append paths to result
+    result_dict['paths'] = paths
+
+    return result_dict
 
 
 def extract_nodes_edges(graph):
@@ -107,42 +166,7 @@ def extract_nodes_edges(graph):
     return nodes, edges, edge_cost
 
 
-def extract_solution(result_file):
-    """
-    This function extracts the solution from the result file of the MCDPP solver.
-    It reads the file and extracts time of the solver, total cost and the paths.
-    Paths are here the indices of the edges in the base graph.
-    """
-
-    result = {}
-    paths = []
-    counter = 0
-    with open(result_file, 'r') as file:
-        for line in file:
-            if counter == 0:
-                # read time of the solver
-                result["time"] = float(line.strip().split()[-1])
-                counter += 1
-            elif counter == 1:
-                # read total cost
-                result["total_cost"] = float(line.strip().split()[-1])
-                counter += 1
-            elif counter == 2:
-                # jump over text
-                counter += 1
-                continue
-            else:
-                # read paths
-                parts = line.strip().split()
-                path = [int(x) for x in parts]
-                paths.append(path)
-
-    # append paths to result
-    result['paths'] = paths
-
-    return result
-
-def plot_graph(graph,demand_graph, sol_path="", fig_size_x=20, fig_size_y=25, fig_dpi=75,
+def plot_graph(graph,demand_graph, result_dict={'total_cost':-1}, fig_size_x=20, fig_size_y=25, fig_dpi=75,
                node_size=500, edge_size=3, terminal_size=500, edge_labels = False,
                edge_lables_size=10, edge_lable_pos=0.5):
     """
@@ -150,7 +174,7 @@ def plot_graph(graph,demand_graph, sol_path="", fig_size_x=20, fig_size_y=25, fi
     The parameters are:
     - graph: data path of graph (base graph or demand graph)
     - demand_graph: data path of demand graph
-    - sol_path: data path of solution
+    - result_dict: result dictionary of the solver with keys
     - fig_size_x: width of graph plot picture in inch
     - fig_size_y: height of graph plot picture in inch
     - fig_dpi: picture dots per inch
@@ -203,11 +227,11 @@ def plot_graph(graph,demand_graph, sol_path="", fig_size_x=20, fig_size_y=25, fi
         for j in range(len(edges_list)):
             col_index = j % len(colors)
             nx.draw_networkx_edges(G, pos=nodes, edgelist=[edges_list[j]], edge_color=colors[col_index], width=edge_size)
-    # Draw base graph with embedded solution
-    if graph != demand_graph and sol_path != "":
+    # Draw base graph with embedded solution, if it exists
+    # If there is no solution, the base graph is drawn
+    if graph != demand_graph and result_dict['total_cost'] != -1:
         # Extract edge indices from solution
-        solution = extract_solution(sol_path)
-        path_edges_indices =  solution['paths']
+        path_edges_indices =  result_dict['paths']
 
         # Create edges [node1, node2] out of edge indices
         paths = []
@@ -238,8 +262,8 @@ if __name__ == "__main__":
 
 
     # Paths to base graph and demand graph files as arguments for solver
-    base_graph = 'deutschland1.gra'
-    demand_graph = 'bedarf19.gra'
+    base_graph = 'beispielBesserUnloesbar.gra'
+    demand_graph = 'bedarf3.gra'
     base_graph_path = os.path.join(parent_dir, 'Testdateien', base_graph)
     demand_graph_path = os.path.join(parent_dir, 'Testdateien', demand_graph)
 
@@ -251,39 +275,20 @@ if __name__ == "__main__":
     VZK_option = 1
 
     # Run solver
-    execute_MCDPP_solver(base_graph_path,
-                        demand_graph_path,
-                        n_sub,
-                        n_iter_half,
-                        n_sub_variant,
-                        lambda_option,
-                        VZK_option)
-
-    result_time = -1
-    result_cost = -1
-
-    # Does solution exists
-    solution_exists = True
-    with open("ergebnis_output.txt", 'r') as file:
-        for line in file:
-            if line.startswith("Zeit in s:"):
-                result_time = line.split(":")[1].strip()
-            if line.startswith("MCDPP besitzt keine Loesung."):
-                solution_exists = False
-                break
+    result = execute_MCDPP_solver(base_graph_path,
+                                    demand_graph_path,
+                                    n_sub,
+                                    n_iter_half,
+                                    n_sub_variant,
+                                    lambda_option,
+                                    VZK_option)
 
     print("========")
     print("Results")
     print("========")
     print(" ")
-    print("Time: ", result_time)
-    # Create graphs, when solution exists
-    if solution_exists:
-        result = extract_solution('ergebnis_output.txt')
-        result_costs = result['total_cost']
-        print("Costs: ", result_costs)
-        fig = plot_graph(base_graph_path, demand_graph_path, sol_path="ergebnis_output.txt",
+    print("Time: ", result['time'])
+    print("Costs: ", result['total_cost'])
+    fig = plot_graph(base_graph_path, demand_graph_path, result_dict=result,
                         edge_labels=False, edge_lables_size=30, edge_lable_pos=0.3)
-        fig.savefig("graph.jpg", format="jpg")
-    else:
-        print("MCDPP has no solution.")
+    fig.savefig("graph.jpg", format="jpg")
