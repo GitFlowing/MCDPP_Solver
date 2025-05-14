@@ -2,15 +2,6 @@ from fastapi import FastAPI, UploadFile, File
 import subprocess
 import os
 
-
-# TODO: create and test a docker image
-# TODO: Docker an gcp schicken + timeout option beachten + Dauer der Berechnung auf Server beachten
-# TODO: Streamlit App API Call für Solver erstellen
-# TODO: Webseite in Lebenslauf packen wie AI Tutor
-# TODO: troopl Projekt Webseite hinzufügen
-
-
-
 # Create Fast API
 app = FastAPI()
 
